@@ -1,0 +1,31 @@
+@startuml
+
+title Dapper Wallet - Multi-Sig Transaction Structure
+
+
+' object Outer {
+'     nonce = unqiue per tx per user
+'     gasprice = price of gas for this tx
+'     startgas = upper limit of gas to use
+'     to = destination of the tx
+'     value = amount of ETH sent
+'     singature = signature of this Tx
+'     ' object Data as data {
+'     '     name = "hello"
+'     ' }
+' }
+
+rectangle "Ethereum Transaction\n\n - nonce \n - gasprice\n - startgas\n - to\n - value\n - signature" as outer {
+    rectangle "Data\n\n - to\n - value\n - wallet_address\n - device_address\n - inner_nonce\n - signature" as data {
+        rectangle "Inner Data" as inner {
+        }
+    }
+}
+
+note left of outer: A standard\nEthereum transaction
+note bottom of data: Ask wallet contract\nfor correct inner nonce
+note bottom of inner: Data sent to inner "to" address\nincluding function, args, etc;\n\nIs "0x" for just sending ETH
+
+@enduml
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml
+
+title Dapper Wallet - Component Diagram
+
+sprite $key [16x16/16] {
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFF00FFFFFFFFFFF
+FF00000000000FFF
+FF000000000000FF
+FFF00FFFFF0F0FFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFF
+}
+
+package "Smart Contract Wallet" as SCW {
+
+    node "Device Keys" {
+    '   interface Ak1 <<$key>> as AK1
+      [DK1] <<$key>> as AK1
+      [DK2] <<$key>> as AK2
+      [DK3] <<$key>> as AK3
+    }
+    
+    node "Recovery" {
+        [Recovery Key] <<$key>> as MK
+    }
+}
+
+package "User Cold Storage" as UCS {
+    [Backup Key] <<$key>> as BU
+}
+
+package "Cosigning Contract 1" as CS1 {
+    [-handleTransaction()] as V1
+}
+
+package "Recovery Transaction" {
+    [- Sets **Backup Key** as sole **Device Key**\n- Signed by **Recovery Key**] as P1
+}
+
+[Cosiging Key] <<$key>> as CS4
+
+AK1 -down-> CS4
+SCW <-down- V1
+P1 -down-> MK
+P1 -down-> BU
+AK3 -down->CS1
+
+@enduml

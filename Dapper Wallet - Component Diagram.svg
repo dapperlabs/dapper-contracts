@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="526px" style="width:740px;height:526px;" version="1.1" viewBox="0 0 740 526" width="740px" zoomAndPan="magnify">
+<defs>
+<filter height="300%" id="fevjzhw0kzwtq" width="300%" x="-1" y="-1">
+<feGaussianBlur result="blurOut" stdDeviation="2.0"/>
+<feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/>
+<feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/>
+<feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/>
+</filter>
+</defs>
+<g>
+<text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacingAndGlyphs" textLength="331" x="210.5" y="16.708">Dapper Wallet - Component Diagram</text>
+<polygon fill="#FFFFFF" filter="url(#fevjzhw0kzwtq)" points="30,180.9531,208,180.9531,215,203.25,526,203.25,526,371.9531,30,371.9531,30,180.9531" style="stroke: #000000; stroke-width: 1.5;"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="30" x2="215" y1="203.25" y2="203.25"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="172" x="34" y="195.9482">Smart Contract Wallet</text>
+<polygon fill="#FFFFFF" filter="url(#fevjzhw0kzwtq)" points="244,241.9531,254,231.9531,494,231.9531,494,329.9531,484,339.9531,244,339.9531,244,241.9531" style="stroke: #000000; stroke-width: 1.5;"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="484" x2="493" y1="241.9531" y2="232.9531"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="244" x2="484" y1="241.9531" y2="241.9531"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="484" x2="484" y1="241.9531" y2="339.9531"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="97" x="316.5" y="257.9482">Device Keys</text>
+<polygon fill="#FFFFFF" filter="url(#fevjzhw0kzwtq)" points="70,241.9531,80,231.9531,220,231.9531,220,329.9531,210,339.9531,70,339.9531,70,241.9531" style="stroke: #000000; stroke-width: 1.5;"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="210" x2="219" y1="241.9531" y2="232.9531"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="70" x2="210" y1="241.9531" y2="241.9531"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="210" x2="210" y1="241.9531" y2="339.9531"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="74" x="104" y="257.9482">Recovery</text>
+<polygon fill="#FFFFFF" filter="url(#fevjzhw0kzwtq)" points="558,236.9531,708,236.9531,715,259.25,718,259.25,718,339.9531,558,339.9531,558,236.9531" style="stroke: #000000; stroke-width: 1.5;"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="558" x2="715" y1="259.25" y2="259.25"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="144" x="562" y="251.9482">User Cold Storage</text>
+<polygon fill="#FFFFFF" filter="url(#fevjzhw0kzwtq)" points="36,411.9531,208,411.9531,215,434.25,267,434.25,267,514.9531,36,514.9531,36,411.9531" style="stroke: #000000; stroke-width: 1.5;"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="36" x2="215" y1="434.25" y2="434.25"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="166" x="40" y="426.9482">Cosigning Contract 1</text>
+<polygon fill="#FFFFFF" filter="url(#fevjzhw0kzwtq)" points="192,44.9531,370,44.9531,377,67.25,526,67.25,526,148.9531,192,148.9531,192,44.9531" style="stroke: #000000; stroke-width: 1.5;"/>
+<line style="stroke: #000000; stroke-width: 1.5;" x1="192" x2="377" y1="67.25" y2="67.25"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="172" x="196" y="59.9482">Recovery Transaction</text>
+<rect fill="#FEFECE" filter="url(#fevjzhw0kzwtq)" height="52.2969" style="stroke: #A80036; stroke-width: 1.5;" width="49" x="428.5" y="271.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="423.5" y="276.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="423.5" y="314.25"/>
+<image height="16" width="16" x="445" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAIUlEQVR42mNgGNHg379zQESaajyIZA049WAKwslRQEMAAADoUOMtJYoRAAAAAElFTkSuQmCC" y="281.9531"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="29" x="438.5" y="310.9482">DK1</text>
+<rect fill="#FEFECE" filter="url(#fevjzhw0kzwtq)" height="52.2969" style="stroke: #A80036; stroke-width: 1.5;" width="49" x="344.5" y="271.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="339.5" y="276.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="339.5" y="314.25"/>
+<image height="16" width="16" x="361" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAIUlEQVR42mNgGNHg379zQESaajyIZA049WAKwslRQEMAAADoUOMtJYoRAAAAAElFTkSuQmCC" y="281.9531"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="29" x="354.5" y="310.9482">DK2</text>
+<rect fill="#FEFECE" filter="url(#fevjzhw0kzwtq)" height="52.2969" style="stroke: #A80036; stroke-width: 1.5;" width="49" x="260.5" y="271.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="255.5" y="276.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="255.5" y="314.25"/>
+<image height="16" width="16" x="277" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAIUlEQVR42mNgGNHg379zQESaajyIZA049WAKwslRQEMAAADoUOMtJYoRAAAAAElFTkSuQmCC" y="281.9531"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="29" x="270.5" y="310.9482">DK3</text>
+<rect fill="#FEFECE" filter="url(#fevjzhw0kzwtq)" height="52.2969" style="stroke: #A80036; stroke-width: 1.5;" width="113" x="90.5" y="271.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="85.5" y="276.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="85.5" y="314.25"/>
+<image height="16" width="16" x="139" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAIUlEQVR42mNgGNHg379zQESaajyIZA049WAKwslRQEMAAADoUOMtJYoRAAAAAElFTkSuQmCC" y="281.9531"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="93" x="100.5" y="310.9482">Recovery Key</text>
+<rect fill="#FEFECE" filter="url(#fevjzhw0kzwtq)" height="52.2969" style="stroke: #A80036; stroke-width: 1.5;" width="101" x="574.5" y="271.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="569.5" y="276.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="569.5" y="314.25"/>
+<image height="16" width="16" x="617" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAIUlEQVR42mNgGNHg379zQESaajyIZA049WAKwslRQEMAAADoUOMtJYoRAAAAAElFTkSuQmCC" y="281.9531"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="81" x="584.5" y="310.9482">Backup Key</text>
+<rect fill="#FEFECE" filter="url(#fevjzhw0kzwtq)" height="36.2969" style="stroke: #A80036; stroke-width: 1.5;" width="163" x="60.5" y="454.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="55.5" y="459.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="55.5" y="481.25"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="143" x="70.5" y="477.9482">-handleTransaction()</text>
+<rect fill="#FEFECE" filter="url(#fevjzhw0kzwtq)" height="52.5938" style="stroke: #A80036; stroke-width: 1.5;" width="301" x="208.5" y="79.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="203.5" y="84.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="203.5" y="122.5469"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="40" x="218.5" y="102.9482">- Sets</text>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="92" x="262.5" y="102.9482">Backup Key</text>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="49" x="358.5" y="102.9482">as sole</text>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="88" x="411.5" y="102.9482">Device Key</text>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="77" x="218.5" y="119.2451">- Signed by</text>
+<text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="109" x="299.5" y="119.2451">Recovery Key</text>
+<rect fill="#FEFECE" filter="url(#fevjzhw0kzwtq)" height="52.2969" style="stroke: #A80036; stroke-width: 1.5;" width="109" x="398.5" y="446.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="393.5" y="451.9531"/>
+<rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="393.5" y="489.25"/>
+<image height="16" width="16" x="445" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAIUlEQVR42mNgGNHg379zQESaajyIZA049WAKwslRQEMAAADoUOMtJYoRAAAAAElFTkSuQmCC" y="456.9531"/>
+<text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="89" x="408.5" y="485.9482">Cosiging Key</text>
+<path d="M453,324.1091 C453,355.2431 453,408.2211 453,441.5869 " fill="none" id="AK1-CS4" style="stroke: #A80036; stroke-width: 1.0;"/>
+<polygon fill="#A80036" points="453,446.7671,457,437.7671,453,441.7671,449,437.7671,453,446.7671" style="stroke: #A80036; stroke-width: 1.0;"/>
+<path d="M65.5728,372.2384 C65.8685,372.8397 66.1661,373.4395 66.4656,374.0377 C68.8614,378.8229 71.377,383.5015 74,387.9531 C88.7635,413.0091 110.578,438.5181 125.492,454.7455 " fill="none" id="SCW-V1" style="stroke: #A80036; stroke-width: 1.0;"/>
+<polygon fill="#A80036" points="65.5728,372.2384,65.9554,382.0799,67.7795,376.7252,73.1342,378.5493,65.5728,372.2384" style="stroke: #A80036; stroke-width: 1.0;"/>
+<path d="M294.53,133.0321 C277.094,141.6651 258.934,152.3651 244,164.9531 C209.324,194.1811 180.21,238.2161 163.183,267.2691 " fill="none" id="P1-MK" style="stroke: #A80036; stroke-width: 1.0;"/>
+<polygon fill="#A80036" points="160.556,271.7991,168.5321,266.0214,163.065,267.4742,161.6122,262.0071,160.556,271.7991" style="stroke: #A80036; stroke-width: 1.0;"/>
+<path d="M433.139,132.9841 C453.696,141.6441 475.446,152.3701 494,164.9531 C536.915,194.0571 577.542,238.5951 601.862,267.7481 " fill="none" id="P1-BU" style="stroke: #A80036; stroke-width: 1.0;"/>
+<polygon fill="#A80036" points="605.33,271.9341,602.6679,262.4519,602.1399,268.084,596.5078,267.556,605.33,271.9341" style="stroke: #A80036; stroke-width: 1.0;"/>
+<path d="M281.219,324.1091 C277.67,347.7246 272.232,383.9086 267.6242,414.5681 C267.4803,415.5262 267.3371,416.479 267.1948,417.4257 C267.1592,417.6624 267.1237,417.8987 267.0882,418.1347 " fill="none" id="AK3-CS1" style="stroke: #A80036; stroke-width: 1.0;"/>
+<polygon fill="#A80036" points="267.0882,418.1347,272.3814,409.8291,267.8313,413.1902,264.4702,408.6402,267.0882,418.1347" style="stroke: #A80036; stroke-width: 1.0;"/>
+</g>
+</svg>
