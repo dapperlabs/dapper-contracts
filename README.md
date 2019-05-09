@@ -2,10 +2,10 @@
 
 ## Overview
 
-This repository implements an Ethereum smart contract wallet.  The wallet has recovery and multi-signature capabilities (via [`cosigner address`](#cosigner-address)) as well as allowing for users to have full sovereignty over all features. 
+This repository implements the [Dapper](https://www.meetdapper.com/?utm_source=github) Ethereum smart contract wallet.  The wallet has recovery and multi-signature capabilities (via [`cosigner address`](#cosigner-address)) as well as allowing for users to have full sovereignty over all features. 
 
 ## Audit of Dapper
-To view the audit of Dapper's smart contracts please see Sigma Prime's audit [here](https://github.com/sigp/public-audits/blob/master/dapper-wallet/review.pdf).
+To view the audit of Dapper's smart contracts please see Sigma Prime's audit [here](https://github.com/sigp/public-audits/blob/master/dapper-wallet/review.pdf) and blog post describing the audit [here](https://blog.sigmaprime.io/dapper-wallet-review.html).
 
 ## Dev Setup
 
