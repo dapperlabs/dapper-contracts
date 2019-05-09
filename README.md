@@ -18,7 +18,7 @@ Node 9
 - `npm install`
 - `npm run build`
 - due to contract bytecode being dependent upon the path at which it was compiled, copy the bytecode from `FullWallet.json` into `WalletFactory.sol`
-`npm test`
+- `npm test`
 
 ### Definitions
 
@@ -28,7 +28,7 @@ Node 9
 
 **value transfer** - the transferring of value by way of ETH, ERC20, ERC721, or any 3rd party contract call.
 
-### General
+## Wallet Design and Features
 
 <img src="./Dapper%20Wallet%20-%20Component%20Diagram.svg">
 
@@ -36,21 +36,21 @@ In contrast to the standard [HD wallet](https://en.bitcoin.it/wiki/Deterministic
 
 ### Recovery Key
 
-The `recovery key` is an ephemeral key that exists only in memory on the clients device for a brief moment.  The key is generated and used to sign the `backup transaction` and then erased from memory.  The wallet contract keeps track of the public address of the `recovery key` that signed the `backup transaction`.
+The `recovery key` is an ephemeral key that exists only in memory on the clients device for a brief moment.  The key is generated and used to sign the `recovery transaction` and then erased from memory.  The wallet contract keeps track of the public address of the `recovery key` that signed the `recovery transaction`.
 
-### Backup Transaction
+### Recovery Transaction
 
-The `backup transaction` is a transaction signed by the `recovery key`.  This transaction authorizes the **RECOVERY** operation.  The **RECOVERY** operation is defined as the one time atomic removal of all existing `device keys` and the assignment of the `backup key` as the sole `device key`.
+The `recovery transaction` is a transaction signed by the `recovery key`.  This transaction authorizes the **RECOVERY** operation.  The **RECOVERY** operation is defined as the one time atomic removal of all existing `device keys` and the assignment of the `backup key` as the sole `device key`.
 
-It should be noted that the `backup transaction` in and of itself is of no use to anyone without the corresponding `backup key`.
+It should be noted that the `recovery transaction` in and of itself is of no use to anyone without the corresponding `backup key`.
 
 ### Backup Key
 
-The `backup-key` is a key that is used in conjunction with the `backup transaction` in order to perform a **RECOVERY**.
+The `backup key` is a key that is used in conjunction with the `recovery transaction` in order to perform a **RECOVERY**.
 
-It should be noted that the `backup-key` in and of itself is of no use to anyone without the corresponding `backup transaction`.
+It should be noted that the `backup key` in and of itself is of no use to anyone without the corresponding `recovery transaction`.
 
-In the Dapper client interface, the `backup-key` is stored in the users "Recovery Kit" in [mini private key format](https://en.bitcoin.it/wiki/Mini_private_key_format).
+In the Dapper client interface, the `backup key` is stored in the users "Recovery Kit" in [mini private key format](https://en.bitcoin.it/wiki/Mini_private_key_format).
 
 ### Device Keys
 
@@ -68,7 +68,7 @@ It is of note that a `device key` can also be a smart contract, which provides a
 - Add another `device key`
 - Remove another `device key`
 - Adjust the `cosigner` on a `device key`
-- Rotate the `backup key` and `backup transaction`
+- Rotate the `backup key` and `recovery transaction`
 
 #### Device Key Inabilities
 
@@ -88,17 +88,17 @@ The cosigning key can also be replaced or removed, allowing for full flexibility
 
 ### Multi-Signature Implementation
 
-The wallet achieves multi-signature capabilities by way of the `invoke()` method and its variants.  Performing all value transfers, administration of `device keys` and rotating the `backup key` and `backup transaction` are required to be called through the `invoke()` method, thus allowing for a cosigning check on all aforementioned operations.  The `invoke()` methods variants are capable of receiving up to two signatures, in addition to the "free" signature provided by `msg.sender`.
+The wallet achieves multi-signature capabilities by way of the `invoke()` method and its variants.  Performing all value transfers, administration of `device keys` and rotating the `backup key` and `recovery transaction` are required to be called through the `invoke()` method, thus allowing for a cosigning check on all aforementioned operations.  The `invoke()` methods variants are capable of receiving up to two signatures, in addition to the "free" signature provided by `msg.sender`.
 
 ### Recovery Operation
 
-A RECOVERY operation is performed by submitting the `backup transaction` to the blockchain network.  The effects of this transaction are as follows:
+A RECOVERY operation is performed by submitting the `recovery transaction` to the blockchain network.  The effects of this transaction are as follows:
 
 - Remove all existing device keys (scorched earth policy)
 - Add the backup key as the only device key
 
 This operation is intended to be executed in the scenario where all the users device keys are LOST, STOLEN or COMPROMISED.  The operation essentially “activates” the `backup key`, and as such the `backup key` is no longer considered a `backup key` but rather a full `device key`.
 
-The user can then rotate the `backup key` and `backup transaction` via their new `device key`.
+The user can then rotate the `backup key` and `recovery transaction` via their new `device key`.
 
 For questions, inquiries or more please email support@meetdapper.com
