@@ -42,7 +42,7 @@ contract Selector {
         return w.invoke2.selector;
     }
 
-    // ERC1271
+    // ERC1654
     function isValidSignatureSelector() public pure returns (bytes4) {
         FullWallet w;
         return w.isValidSignature.selector;

@@ -79,7 +79,7 @@ const funcHash = signature => {
  * @param {string} walletAddr address of wallet
  * @param {Buffer} hash hashed data
  */
-const getSha3ForERC1271 = (walletAddr, hash) => {
+const getSha3ForERC1654 = (walletAddr, hash) => {
   return abi.soliditySHA3(
     ['int8', 'int8', 'address', 'bytes32'],
     [0x19, 0x0, new BN(walletAddr.replace('0x', ''), 16), hash]
@@ -199,7 +199,7 @@ module.exports = {
   waitForEvents,
   expectThrow,
   getSha3ForConfirmationTx,
-  getSha3ForERC1271,
+  getSha3ForERC1654,
   //getSha3ForConfirmationTxCallData,
   serializeSignature,
   serializeSignatures,
