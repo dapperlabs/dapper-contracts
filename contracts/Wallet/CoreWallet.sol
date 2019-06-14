@@ -2,7 +2,7 @@ pragma solidity ^0.5.6;
 
 import "../ERC721/ERC721Receivable.sol";
 import "../ERC223/ERC223Receiver.sol";
-import "../ERC1271/ERC1271.sol";
+import "../ERC1654/ERC1654.sol";
 import "../ECDSA.sol";
 
 
@@ -20,7 +20,7 @@ import "../ECDSA.sol";
 ///  implemented here) is negligible even if you don't need the cosigner functionality, and
 ///  (B) two-of-two multisig (as implemented here) handles a lot of really common use cases, most
 ///  notably third-party gas payment and off-chain blacklisting and fraud detection.
-contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1271  {
+contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
 
     using ECDSA for bytes;
 
@@ -276,7 +276,7 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1271  {
     }
 
     /// @notice Should return whether the signature provided is valid for the provided data
-    ///  See https://github.com/ethereum/EIPs/issues/1271
+    ///  See https://github.com/ethereum/EIPs/issues/1654
     /// @dev This function meets the following conditions as per the EIP:
     ///  MUST return the bytes4 magic value `0x1626ba7e` when function passes.
     ///  MUST NOT modify state (using `STATICCALL` for solc < 0.5, `view` modifier for solc > 0.5)
@@ -335,7 +335,7 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1271  {
             return 0;
         }
 
-        return ERC1271_VALIDSIGNATURE;
+        return ERC1654_VALIDSIGNATURE;
     }
 
     /// @notice Query if a contract implements an interface
@@ -351,7 +351,7 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1271  {
             interfaceID == ERC721_RECEIVED_FINAL || // ERC721 Final
             interfaceID == ERC721_RECEIVED_DRAFT || // ERC721 Draft
             interfaceID == ERC223_ID || // ERC223
-            interfaceID == ERC1271_VALIDSIGNATURE; // ERC1271
+            interfaceID == ERC1654_VALIDSIGNATURE; // ERC1654
     }
 
     /// @notice A version of `invoke()` that has no explicit signatures, and uses msg.sender

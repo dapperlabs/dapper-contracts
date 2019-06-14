@@ -215,14 +215,14 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 }
             });
 
-            describe('concerning ERC1271 compatibility', function () {
+            describe('concerning ERC1654 compatibility', function () {
                 const data = "hello world";
-                const ERC1271_VS = "0x1626ba7e";
+                const ERC1654_VS = "0x1626ba7e";
 
                 it('should be able to validate a signature', async function () {
                     // prepare a signature from the signer and the cosigner
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -234,12 +234,12 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                     // call contract
                     const result = await wallet.isValidSignature('0x' + dataHash.toString('hex'), combined);
                     // check result
-                    result.should.eql(ERC1271_VS);
+                    result.should.eql(ERC1654_VS);
                 });
 
                 it('should return 0 if provided an invalid signature', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -257,7 +257,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 it('should return 0 if provided an invalid signature length', async function () {
 
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -273,7 +273,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
 
                 it('should return 0 if only given 1 signature', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -287,7 +287,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 it('should return 0 if given signature from a key that is not the cosigner', async function () {
 
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -304,7 +304,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 it('should return 0 if given signature from a key that is not an authorized key', async function () {
 
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -3561,14 +3561,14 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 }
             });
 
-            describe('concerning ERC1271 compatibility', function () {
+            describe('concerning ERC1654 compatibility', function () {
                 const data = "hello worlds";
-                const ERC1271_VS = "0x1626ba7e";
+                const ERC1654_VS = "0x1626ba7e";
 
                 it('should be able to validate a signature', async function () {
                     // prepare a signature from the signer and the cosigner
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -3578,13 +3578,13 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                     // call contract
                     const result = await wallet.isValidSignature('0x' + dataHash.toString('hex'), combined);
                     // check result
-                    result.should.eql(ERC1271_VS);
+                    result.should.eql(ERC1654_VS);
                 });
 
                 it('should be able to validate a signature with two signatures', async function () {
                     // prepare a signature from the signer and the cosigner
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -3596,12 +3596,12 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                     // call contract
                     const result = await wallet.isValidSignature('0x' + dataHash.toString('hex'), combined);
                     // check result
-                    result.should.eql(ERC1271_VS);
+                    result.should.eql(ERC1654_VS);
                 });
 
                 it('should return 0 if provided an invalid signature', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -3615,7 +3615,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
 
                 it('should return 0 if provided an invalid signature length', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -3630,7 +3630,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
 
                 it('should return 0 if given signature from a key that is not an authorized key', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1271(
+                    const hashToSign = utils.getSha3ForERC1654(
                         wallet.address,
                         dataHash
                     );
@@ -4851,8 +4851,8 @@ contract('Wallet', async (accounts) => {
                             const ERC721_RECEIVED_DRAFT = "0xf0b9e5ba";
                             const ERC223_ID = "0xc0ee0b8a";
                             const ERC165_ID = "0x01ffc9a7"
-                            const ERC1271_VS = "0x1626ba7e";
-                            addrs = [ERC721_RECEIVED_FINAL, ERC721_RECEIVED_DRAFT, ERC223_ID, ERC165_ID, ERC1271_VS];
+                            const ERC1654_VS = "0x1626ba7e";
+                            addrs = [ERC721_RECEIVED_FINAL, ERC721_RECEIVED_DRAFT, ERC223_ID, ERC165_ID, ERC1654_VS];
                         });
 
                         it('should return true for the interfaces it implements', async function () {
