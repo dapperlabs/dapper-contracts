@@ -46,6 +46,21 @@ module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
   // to customize your Truffle configuration!
   networks: {
+    // development: {
+    //   host: "127.0.0.1",
+    //   port: 8545,
+    //   gas: 4500000, // Gas limit used for deploys
+    //   gasPrice: 10000000000,
+    //   network_id: "*" // Match any network id
+    // },
+    // development: {
+    //   host: "127.0.0.1",
+    //   port: 9545,
+    //   gas: 45000000, // Gas limit used for deploys
+    //   gasPrice: 10000000000,
+    //   network_id: "*" // Match any network id
+    // },
+
     // this is rinkeby for our geth node
     rinkeby_geth: {
       provider: getProvider,
@@ -80,7 +95,7 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: "0.5.6",
+      version: "0.5.10",
       settings: {
         evmVersion: "constantinople",
         optimizer: {

@@ -1,15 +1,13 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
+// apparently events are not '.selector'able
 import "../Wallet/FullWallet.sol";
-
 
 contract Selector {
 
     // Events
-
+    
     function invocationSuccessSelector() public pure returns (bytes32) {
-        // Note: we are currently unable to use the `.selector` method
-        // for events
         return keccak256("InvocationSuccess(bytes32,uint256,uint256)");
     }
 
@@ -42,7 +40,7 @@ contract Selector {
         return w.invoke2.selector;
     }
 
-    // ERC1654
+    // ERC1271
     function isValidSignatureSelector() public pure returns (bytes4) {
         FullWallet w;
         return w.isValidSignature.selector;

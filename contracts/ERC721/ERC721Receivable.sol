@@ -1,4 +1,4 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
 import "./ERC721ReceiverDraft.sol";
 import "./ERC721ReceiverFinal.sol";
@@ -29,9 +29,6 @@ contract ERC721Receivable is ERC721ReceiverDraft, ERC721ReceiverFinal {
         _tokenId;
         data;
 
-        // Note: because this is callable by any address, we can not rely
-        // on this event being representative of all ERC721's received.
-        // Therefor, we chose to not emit the event and save some gas as a result.
         // emit ERC721Received(_operator, _from, _tokenId, _data, gasleft());
 
         return ERC721_RECEIVED_DRAFT;

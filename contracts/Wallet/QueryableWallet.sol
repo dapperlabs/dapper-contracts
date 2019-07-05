@@ -1,4 +1,4 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
 import "./CoreWallet.sol";
 import "../ERC165/ERC165Query.sol";

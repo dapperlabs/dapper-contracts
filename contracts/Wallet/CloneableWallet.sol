@@ -1,4 +1,4 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
 import "./CoreWallet.sol";
 
@@ -8,7 +8,7 @@ import "./CoreWallet.sol";
 ///  It is meant to be deployed and serve as the contract that you clone
 ///  in an EIP 1167 clone setup.
 /// @dev See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1167.md
-/// @dev Currently, we are seeing approximately 933 gas overhead for using
+/// @dev Currently, we are seeing approximatley 933 gas overhead for using
 ///  the clone wallet; use `FullWallet` if you think users will overtake
 ///  the transaction threshold over the lifetime of the wallet.
 contract CloneableWallet is CoreWallet {

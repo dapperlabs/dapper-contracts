@@ -1,7 +1,8 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
 /// @notice this throws on its default (and only) payable function
 contract ThrowOnPayable {
+    //uint256 balance;
 
     function() external payable {
 

@@ -19,10 +19,10 @@
     "lodash": "^4.17.10",
     "openzeppelin-solidity": "^2.1.3",
     "should": "^13.2.1",
-    "solc": "^0.5.6",
+    "solc": "^0.5.9",
     "truffle": "^5.0.8",
     "truffle-hdwallet-provider": "github:dapperlabs/truffle-hdwallet-provider#v1.0.1",
-    "web3": "1.0.0-beta.48"
+    "web3": "1.0.0-beta.55"
   },
   "devDependencies": {
     "solidity-coverage": "^0.5.11"
@@ -30,7 +30,7 @@
   "scripts": {
     "test": "./node_modules/.bin/truffle test",
     "truffle": "truffle",
-    "build": "./node_modules/.bin/truffle compile",
+    "build": "./node_modules/.bin/truffle compile && node ./scripts/generate-wallet-bytecode-contract.js > ./contracts/WalletFactory/FullWalletByteCode.sol",
     "deploy": "./node_modules/.bin/truffle migrate -f 2 --network rinkeby_local",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },

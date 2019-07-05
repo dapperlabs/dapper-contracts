@@ -7,6 +7,7 @@
 var WalletFactory = artifacts.require("./WalletFactory/WalletFactory.sol");
 var CloneableWallet = artifacts.require('./Wallet/CloneableWallet.sol');
 
+
 module.exports = function (deployer) {
 
     deployer.deploy(CloneableWallet).then(() => {

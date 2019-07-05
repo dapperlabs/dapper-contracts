@@ -1,4 +1,4 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
 
 /// @title ECDSA is a library that contains useful methods for working with ECDSA signatures

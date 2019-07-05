@@ -13,6 +13,7 @@ const ERC721TokenMock = artifacts.require('./Test/ERC721TokenMock.sol');
 const ThrowOnPayable = artifacts.require('./Test/ThrowOnPayable.sol');
 const SimpleWallet = artifacts.require('./Test/SimpleWallet.sol');
 const Selector = artifacts.require('./Test/Selector.sol');
+const Delegate = artifacts.require('./Test/Delegate.sol');
 const { bytecode: fullBytecode } = require('../build/contracts/FullWallet.json');
 
 require('chai').should();
@@ -70,24 +71,13 @@ const TRANSFER_MULTI = "Multi Transfer";
 // global prices
 let gasPrices = [];
 
-// const WALLET_REGULAR = 0;
-// const WALLET_CLONE = 1;
-// const WALLET_REGULAR_2 = 2;
-// const WALLET_CLONE_2 = 3;
-
-// const BASE = 0;
-// const INVOKE0 = 1;
-// const INVOKE1 = 2;
-// const INVOKE11 = 3;
-// const INVOKE2 = 4;
-
 const logGasPrice = function (wtype, method, operation, gas) {
     // method and type pick row
     let obj = {};
     obj[operation] = gas;
-    let i = 0;
-    if (method != BASE) {
-        i = (wtype * 4) + method;
+    let i = wtype * 5 + method;
+    if (wtype == walletutils.WALLET_CLONE || wtype == walletutils.WALLET_CLONE_2) {
+        i -= 1;
     }
     gasPrices[i] = { ...gasPrices[i], ...obj };
 };
@@ -110,6 +100,15 @@ const setRecoveryAddressData = (newAddr) => {
     return Buffer.concat(dataArr);
 };
 
+const setDelegateData = (methodID, delegate) => {
+    let dataArr = [];
+    dataArr.push(utils.funcHash('setDelegate(bytes4,address)'));
+    dataArr.push(Buffer.from(utils.padBytes4(methodID), 'hex'));
+    dataArr.push(abi.rawEncode(['address'], [delegate]));
+    return Buffer.concat(dataArr);
+}
+
+// TODO: load abi and auto-calculate this
 const SET_AUTHORIZED_SIGNATURE = 'setAuthorized(address,uint256)';
 
 const setAuthorizedData = (signer, cosigner) => {
@@ -185,7 +184,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
 
             it('should be able to get the version', async function () {
                 const version = await wallet.VERSION.call();
-                version.should.eql("1.0.1");
+                version.should.eql("1.1.0");
             });
 
             it('should be at the expected address if using create2', async function () {
@@ -215,14 +214,14 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 }
             });
 
-            describe('concerning ERC1654 compatibility', function () {
+            describe('concerning ERC1271 compatibility', function () {
                 const data = "hello world";
-                const ERC1654_VS = "0x1626ba7e";
+                const ERC1271_VS = "0x1626ba7e";
 
                 it('should be able to validate a signature', async function () {
                     // prepare a signature from the signer and the cosigner
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -234,12 +233,12 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                     // call contract
                     const result = await wallet.isValidSignature('0x' + dataHash.toString('hex'), combined);
                     // check result
-                    result.should.eql(ERC1654_VS);
+                    result.should.eql(ERC1271_VS);
                 });
 
                 it('should return 0 if provided an invalid signature', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -250,6 +249,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                         sig2.r.toString('hex') + sig2.s.toString('hex') + Buffer.from([sig2.v]).toString('hex');
                     // mess with the signature
                     combined = incrementCharAt(combined, 10);
+                    // TODO: this fails more often than you think and requires more messing
                     const result = await wallet.isValidSignature('0x' + dataHash.toString('hex'), combined);
                     result.should.eql("0x00000000");
                 });
@@ -257,7 +257,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 it('should return 0 if provided an invalid signature length', async function () {
 
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -273,7 +273,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
 
                 it('should return 0 if only given 1 signature', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -287,7 +287,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 it('should return 0 if given signature from a key that is not the cosigner', async function () {
 
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -304,7 +304,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 it('should return 0 if given signature from a key that is not an authorized key', async function () {
 
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -435,11 +435,6 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                             });
                         });
 
-                        it('should not be able to set the recovery address to an authorized address', async function () {
-
-
-                        });
-
                         describe('emergency recovery performed', function () {
 
                             const newAdminPublicKey = accounts[6];
@@ -454,7 +449,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                 curAuthVersion = await wallet.authVersion.call();
 
                                 const res = await wallet.emergencyRecovery(newAdminPublicKey, fullCosignerKey, { from: masterPublicKey });
-                                //console.log('emergencyRecovery gas used: ' + res.receipt.gasUsed);
+                                console.log('emergencyRecovery gas used: ' + res.receipt.gasUsed);
                             });
 
                             it('should be able to perform transactions with backup key', async function () {
@@ -525,7 +520,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                     { address1: newAdminPublicKey, private1: newAdminPrivateKey },
                                     cosignerPublicKey
                                 );
-                                //console.log('setRecoveryAddress gas cost: ' + res);
+                                console.log('setRecoveryAddress gas cost: ' + res);
                                 const fromwallet = await wallet.recoveryAddress.call();
                                 fromwallet.should.eql(newRecoveryAddress);
                             });
@@ -536,7 +531,10 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                 //function recoverGas(uint256 _version, address[] _keys)
 
                                 const res = await wallet.recoverGas(1, [adminPublicKey]);
-                                //console.log('recoverGas gas used: ' + res.receipt.gasUsed);
+                                //res.should.be.less
+                                // 15569
+                                console.log('recoverGas gas used: ' + res.receipt.gasUsed);
+                                //TODO
                             });
 
                             it('should be able to to add a new key', async function () {
@@ -635,6 +633,10 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                 });
                             });
 
+                            it('should not be able to set the recovery address to an authorized address', async function () {
+
+                            });
+
                             describe('new key added', function () {
 
                                 const newKeyPair = utils.newKeyPair();
@@ -656,7 +658,6 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                     );
                                     nonce += 1;
                                 });
-
                             });
 
                         });
@@ -685,7 +686,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                     cosignerPublicKey
                                 );
 
-                                //console.log('setRecoveryAddress gas used: ' + gas);
+                                console.log('setRecoveryAddress gas used: ' + gas);
                             });
 
                             it('should not be able to do a recovery with the old recovery address', async function () {
@@ -804,7 +805,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                         cosignerPublicKey
                                     );
 
-                                    //console.log('setAuthorized gas used: ' + gas);
+                                    console.log('setAuthorized gas used: ' + gas);
 
                                     // we used a nonce here, we need to increment it
                                     nonce += 1;
@@ -982,7 +983,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                         nonce,
                                         { address1: adminPublicKey, private1: adminPrivateKey },
                                         cosignerPublicKey);
-                                    //console.log('setAuthorized gas used: ' + gas);
+                                    console.log('setAuthorized gas used: ' + gas);
 
                                     // we used a nonce here, so we need to increment
                                     nonce += 1
@@ -1191,7 +1192,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                 const s = '0x' + sig1.s.toString('hex');
                                 const v = '0x' + Buffer.from([sig1.v + 9]).toString('hex');
 
-                                //console.log("v: " + v);
+                                console.log("v: " + v);
 
                                 // call invoke1CosignerSends
                                 await utils.expectThrow(
@@ -1379,7 +1380,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                 const s = '0x' + sig1.s.toString('hex');
                                 const v = '0x' + Buffer.from([sig1.v + 9]).toString('hex');
 
-                                //console.log("v: " + v);
+                                console.log("v: " + v);
 
                                 // call invoke1SignerSends
                                 await utils.expectThrow(
@@ -3167,7 +3168,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                             )
                                         );
 
-                                        // verify that nothing has changed
+                                        // TODO: verify that nothing has changed
                                         const ethRecipientNewBalance = web3.utils.toBN(await web3.eth.getBalance(ethRecipient));
                                         ethRecipientNewBalance.should.eql(ethRecipientOrigBalance);
                                         const walletNewBalance = web3.utils.toBN(await web3.eth.getBalance(wallet.address));
@@ -3273,6 +3274,11 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                         );
 
                                         logGasPrice(wtype, INVOKE2, TRANSFER_MULTI, gas);
+
+                                        // TODO: analyze logs
+                                        // result.logs[0].args["numOperations"].should.eql(web3.utils.toBN(3));
+                                        // result.logs[0].args["hash"].should.eql('0x' + operationHash.toString('hex'));
+                                        // result.logs[0].args["result"].should.eql(web3.utils.toBN(0));
                                     });
 
                                     // Multisend
@@ -3403,6 +3409,11 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                         );
 
                                         logGasPrice(wtype, INVOKE2, TRANSFER_MULTI, gas);
+
+                                        // TODO: analyze logs
+                                        // result.logs[0].args["numOperations"].should.eql(web3.utils.toBN(3));
+                                        // result.logs[0].args["hash"].should.eql('0x' + operationHash.toString('hex'));
+                                        // result.logs[0].args["result"].should.eql(web3.utils.toBN(0));
                                     });
 
                                     // Multisend
@@ -3535,7 +3546,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
 
             it('should be able to get the version', async function () {
                 const version = await wallet.VERSION.call();
-                version.should.eql("1.0.1");
+                version.should.eql("1.1.0");
             });
 
             it('should be at the expected address if using create2', async function () {
@@ -3561,14 +3572,238 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                 }
             });
 
-            describe('concerning ERC1654 compatibility', function () {
+            describe('concerning extensibility', function () {
+                const RANDOM_METHOD_ID = "12345678";
+                const DO_SOMETHING_ID = utils.funcHash("doSomething()").toString("hex");
+                const DO_SOMETHING_ELSE_ID = utils.funcHash("doSomethingElse(uint256)").toString("hex");
+                const DO_SOMETHING_THAT_REVERTS_ID = utils.funcHash("doSomethingThatReverts()").toString("hex");
+                const DO_SOMETHING_THAT_WRITES_TO_STORAGE_ID = utils.funcHash("doSomethingThatWritesToStorage()").toString("hex");
+                const COMPOSITE_INTERFACE_ID = 'f8a4fb69';
+                const DELEGATE_IGNORE = '0x1';
+                
+                let delegate, checker;
+
+                beforeEach(async function () {
+                    delegate = await Delegate.new();   
+                    checker = await ERC165Checker.new();
+                });
+
+                it('should revert for unsupported interface', function () {
+                    utils.expectThrow(
+                        walletutils.callDynamic(wallet, RANDOM_METHOD_ID) 
+                    );
+                });
+                
+                it('should not be able to call setDelegate directly', async function () {
+                    await utils.expectThrow(
+                        wallet.setDelegate('0x'+utils.padBytes4(DO_SOMETHING_ID), delegate.address)
+                    );
+                });
+
+                it('should be able to set a delegate', async function () {
+                    const res = await wallet.invoke0(
+                        '0x'+walletutils.txData(
+                            1, // revert (stricter)
+                            wallet.address,
+                            web3.utils.toWei("0", 'wei'),
+                            setDelegateData(DO_SOMETHING_ID, delegate.address)).toString('hex'),
+                        { from: adminPublicKey }
+                    );
+                    res.logs[0].event.should.eql('DelegateUpdated');
+                    res.logs[0].args['interfaceId'].should.eql('0x'+DO_SOMETHING_ID);
+                    res.logs[0].args['delegate'].should.eql(delegate.address);
+                });
+
+                describe('with delegate set for SimpleInterface', function () {
+                    beforeEach(async function () {
+                        await walletutils.transact0(walletutils.txData(
+                                1, // revert (stricter)
+                                wallet.address,
+                                web3.utils.toWei("0", 'wei'),
+                                setDelegateData(DO_SOMETHING_ID, delegate.address)
+                            ), 
+                            wallet, 
+                            adminPublicKey
+                        );  
+                    });
+
+                    it('should show delegate in mapping', async function () {
+                        const addr = await wallet.delegates("0x"+utils.padBytes4(DO_SOMETHING_ID));
+                        addr.should.eql(delegate.address);
+                    });
+
+                    it('should pass calls to doSomething to the delegate', async function () {
+                        const res = await walletutils.callDynamic(wallet, DO_SOMETHING_ID);
+                        web3.utils.toBN(res).toNumber().should.eql(42);
+                    });
+
+                    it('should support interface for SimpleInterface', async function () {
+                        const res = await checker.checkInterfaces(wallet.address, ['0x'+DO_SOMETHING_ID]);
+                        res.should.eql(true);
+                    });
+
+                    it('should be able to remove delegate', async function () {
+                        await walletutils.transact0(walletutils.txData(
+                                1, // revert (stricter)
+                                wallet.address,
+                                web3.utils.toWei("0", 'wei'),
+                                setDelegateData(DO_SOMETHING_ID, `0x${'0'.repeat(40)}`)
+                            ), 
+                            wallet, 
+                            adminPublicKey
+                        );
+                    });
+
+                    describe('with SimpleInterface delegate removed', async function () {
+                        beforeEach(async function () {
+                            await walletutils.transact0(walletutils.txData(
+                                    1, // revert (stricter)
+                                    wallet.address,
+                                    web3.utils.toWei("0", 'wei'),
+                                    setDelegateData(DO_SOMETHING_ID, `0x${'0'.repeat(40)}`)
+                                ), 
+                                wallet, 
+                                adminPublicKey
+                            );
+                        });
+
+                        it('should not show delegate in mapping', async function () {
+                            const addr = await wallet.delegates("0x"+utils.padBytes4(DO_SOMETHING_ID));
+                            addr.should.eql(`0x${'0'.repeat(40)}`);
+                        });
+
+                        it('should revert on calls to doSomething', async function () {
+                            utils.expectThrow(
+                                walletutils.callDynamic(wallet, DO_SOMETHING_ID) 
+                            );
+                        });
+                    });
+                });
+
+                describe('with delegate set for CompositeInterface', function () {
+                    beforeEach(async function () {
+                        // set delegates for both functions
+                        await walletutils.transact0(walletutils.txData(
+                                1, // revert (stricter)
+                                wallet.address,
+                                web3.utils.toWei("0", 'wei'),
+                                setDelegateData(DO_SOMETHING_ID, delegate.address)
+                            ), 
+                            wallet, 
+                            adminPublicKey
+                        );
+
+                        await walletutils.transact0(walletutils.txData(
+                                1, // revert (stricter)
+                                wallet.address,
+                                web3.utils.toWei("0", 'wei'),
+                                setDelegateData(DO_SOMETHING_ELSE_ID, delegate.address)
+                            ), 
+                            wallet, 
+                            adminPublicKey
+                        );
+                    });
+
+                    it('should pass calls to doSomething and doSomethingElse', async function () {
+                        let res = await walletutils.callDynamic(wallet, DO_SOMETHING_ID);
+                        let resBN = web3.utils.toBN(res)
+                        resBN.toNumber().should.eql(42);
+
+                        res = await walletutils.callDynamic(
+                            wallet, 
+                            DO_SOMETHING_ELSE_ID, 
+                            utils.numToBuffer(2).toString('hex')
+                        );
+                        web3.utils.toBN(res).toNumber().should.eql(2);
+                    });
+
+                    it('should support interface for both functions of CompositeInterface', async function () {
+                        const res = await checker.checkInterfaces(wallet.address, ['0x'+DO_SOMETHING_ID, '0x'+DO_SOMETHING_ELSE_ID]);
+                        res.should.eql(true);
+                    });
+
+                    it('should NOT support interface for CompositeInterface', async function () {
+                        const res = await checker.checkInterfaces(wallet.address, ['0x'+COMPOSITE_INTERFACE_ID]);
+                        res.should.eql(false);
+                    });
+
+                    describe('with composite interface ID support specified', function () {
+                        beforeEach(async function () {
+                            await walletutils.transact0(walletutils.txData(
+                                    1, // revert (stricter)
+                                    wallet.address,
+                                    web3.utils.toWei("0", 'wei'),
+                                    setDelegateData(COMPOSITE_INTERFACE_ID, DELEGATE_IGNORE)
+                                ), 
+                                wallet, 
+                                adminPublicKey
+                            );   
+                        });
+
+                        it('should support interface for CompositeInterface', async function () {
+                            const res = await checker.checkInterfaces(wallet.address, ['0x'+COMPOSITE_INTERFACE_ID]);
+                            res.should.eql(true);
+                        });
+
+                        it('should revert when attempting to call function corresponding to CompositeInterface ID', async function () {
+                            utils.expectThrow(
+                               walletutils.callDynamic(wallet, COMPOSITE_INTERFACE_ID) 
+                            );
+                        });
+                    });
+
+                    describe('with revert and write functions added', function () {
+                        beforeEach(async function () {
+                            await walletutils.transact0(walletutils.txData(
+                                    1, // revert (stricter)
+                                    wallet.address,
+                                    web3.utils.toWei("0", 'wei'),
+                                    setDelegateData(DO_SOMETHING_THAT_REVERTS_ID, delegate.address)
+                                ), 
+                                wallet, 
+                                adminPublicKey
+                            );
+
+                            await walletutils.transact0(walletutils.txData(
+                                    1, // revert (stricter)
+                                    wallet.address,
+                                    web3.utils.toWei("0", 'wei'),
+                                    setDelegateData(DO_SOMETHING_THAT_WRITES_TO_STORAGE_ID, delegate.address)
+                                ), 
+                                wallet, 
+                                adminPublicKey
+                            );
+                        });
+
+                        it('should revert if the delegate reverts', async function () {
+                            await utils.expectThrow(
+                                walletutils.callDynamic(
+                                    wallet, 
+                                    DO_SOMETHING_THAT_REVERTS_ID
+                                )
+                            );
+                        });
+
+                        it('should revert if it attempts to write to storage', async function () {
+                            await utils.expectThrow(
+                                walletutils.callDynamic(
+                                    wallet, 
+                                    DO_SOMETHING_THAT_WRITES_TO_STORAGE_ID 
+                                )
+                            );
+                        });
+                    });
+                });
+            }); 
+
+            describe('concerning ERC1271 compatibility', function () {
                 const data = "hello worlds";
-                const ERC1654_VS = "0x1626ba7e";
+                const ERC1271_VS = "0x1626ba7e";
 
                 it('should be able to validate a signature', async function () {
                     // prepare a signature from the signer and the cosigner
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -3578,13 +3813,13 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                     // call contract
                     const result = await wallet.isValidSignature('0x' + dataHash.toString('hex'), combined);
                     // check result
-                    result.should.eql(ERC1654_VS);
+                    result.should.eql(ERC1271_VS);
                 });
 
                 it('should be able to validate a signature with two signatures', async function () {
                     // prepare a signature from the signer and the cosigner
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -3596,12 +3831,12 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                     // call contract
                     const result = await wallet.isValidSignature('0x' + dataHash.toString('hex'), combined);
                     // check result
-                    result.should.eql(ERC1654_VS);
+                    result.should.eql(ERC1271_VS);
                 });
 
                 it('should return 0 if provided an invalid signature', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -3615,7 +3850,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
 
                 it('should return 0 if provided an invalid signature length', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -3630,7 +3865,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
 
                 it('should return 0 if given signature from a key that is not an authorized key', async function () {
                     const dataHash = abi.soliditySHA3(['string'], [data]);
-                    const hashToSign = utils.getSha3ForERC1654(
+                    const hashToSign = utils.getSha3ForERC1271(
                         wallet.address,
                         dataHash
                     );
@@ -3764,6 +3999,7 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                     });
 
                     describe('with regards to erc20 tokens', function () {
+                        // TODO
                         const erc20Owner = accounts[1];
                         const anotherAccount = accounts[2];
                         const totalSupply = 100
@@ -4480,17 +4716,13 @@ const testSuite = async function (wtype, accounts, _walletFactory, _cloneAddress
                                         recipAmt.eq(erc721RecipientOrigBalance).should.eql(true);
                                     });
                                 });
-
                             });
-
                         });
-
                     });
                 });
             });
         });
     });
-
 };
 
 
@@ -4851,8 +5083,8 @@ contract('Wallet', async (accounts) => {
                             const ERC721_RECEIVED_DRAFT = "0xf0b9e5ba";
                             const ERC223_ID = "0xc0ee0b8a";
                             const ERC165_ID = "0x01ffc9a7"
-                            const ERC1654_VS = "0x1626ba7e";
-                            addrs = [ERC721_RECEIVED_FINAL, ERC721_RECEIVED_DRAFT, ERC223_ID, ERC165_ID, ERC1654_VS];
+                            const ERC1271_VS = "0x1626ba7e";
+                            addrs = [ERC721_RECEIVED_FINAL, ERC721_RECEIVED_DRAFT, ERC223_ID, ERC165_ID, ERC1271_VS];
                         });
 
                         it('should return true for the interfaces it implements', async function () {
@@ -4894,6 +5126,7 @@ contract('Wallet', async (accounts) => {
 
             // do ERC20
             describe('with regards to erc20 tokens', function () {
+                // TODO
                 const erc20Owner = accounts[1];
                 const anotherAccount = accounts[2];
                 const totalSupply = 100

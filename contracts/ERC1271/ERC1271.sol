@@ -1,9 +1,9 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
-contract ERC1654 {
+contract ERC1271 {
 
     /// @dev bytes4(keccak256("isValidSignature(bytes32,bytes)")
-    bytes4 internal constant ERC1654_VALIDSIGNATURE = 0x1626ba7e;
+    bytes4 internal constant ERC1271_VALIDSIGNATURE = 0x1626ba7e;
 
     /// @dev Should return whether the signature provided is valid for the provided data
     /// @param hash 32-byte hash of the data that is signed

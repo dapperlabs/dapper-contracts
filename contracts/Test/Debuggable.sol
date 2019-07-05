@@ -1,4 +1,4 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
 
 /// @title aid development, should not be released into final version
@@ -10,6 +10,7 @@ contract Debuggable {
     event LogInt256(string label, int256 value);
     event LogAddress(string label, address addr);
     event LogBytes32(string label, bytes32 b);
+    event LogBytes4(string label, bytes4 b);
     event LogBytes1(string label, bytes1 b);
     event LogBytes(string label, bytes b);
     event LogBool(string label, bool b);

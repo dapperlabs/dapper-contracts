@@ -79,7 +79,7 @@ const funcHash = signature => {
  * @param {string} walletAddr address of wallet
  * @param {Buffer} hash hashed data
  */
-const getSha3ForERC1654 = (walletAddr, hash) => {
+const getSha3ForERC1271 = (walletAddr, hash) => {
   return abi.soliditySHA3(
     ['int8', 'int8', 'address', 'bytes32'],
     [0x19, 0x0, new BN(walletAddr.replace('0x', ''), 16), hash]
@@ -101,6 +101,12 @@ const numToBufferWithN = (num, amt) => {
     "hex"
   ); // number
 };
+
+/**
+ * Pads a bytes4, encoded as a hex string, to 32 bytes.
+ * The output is a hex-encoded string.
+ */
+const padBytes4 = b => `${b}${'0'.repeat(64-4*2)}`;
 
 /**
  * 
@@ -199,7 +205,7 @@ module.exports = {
   waitForEvents,
   expectThrow,
   getSha3ForConfirmationTx,
-  getSha3ForERC1654,
+  getSha3ForERC1271,
   //getSha3ForConfirmationTxCallData,
   serializeSignature,
   serializeSignatures,
@@ -212,5 +218,6 @@ module.exports = {
   newKeyPair,
   asAddressString,
   getBalanceWei,
-  buildCreate2Address
+  buildCreate2Address,
+  padBytes4 
 };

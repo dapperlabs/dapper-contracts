@@ -1,8 +1,8 @@
-pragma solidity ^0.5.6;
+pragma solidity ^0.5.10;
 
 import "../ERC721/ERC721Receivable.sol";
 import "../ERC223/ERC223Receiver.sol";
-import "../ERC1654/ERC1654.sol";
+import "../ERC1271/ERC1271.sol";
 import "../ECDSA.sol";
 
 
@@ -17,10 +17,10 @@ import "../ECDSA.sol";
 ///  (which can be tracked as a signer without cosigner, or as a cosigner) or as an off-chain flow
 ///  using a public/private key pair as cosigner. Of course, the basic cosigning functionality could
 ///  also be implemented in this way, but (A) the complexity and gas cost of two-of-two multisig (as
-///  implemented here) is negligible even if you don't need the cosigner functionality, and
+///  implemented here) is negligable even if you don't need the cosigner functionality, and
 ///  (B) two-of-two multisig (as implemented here) handles a lot of really common use cases, most
 ///  notably third-party gas payment and off-chain blacklisting and fraud detection.
-contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
+contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1271 {
 
     using ECDSA for bytes;
 
@@ -30,7 +30,12 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     byte public constant EIP191_PREFIX = byte(0x19);
 
     /// @notice This is the version of the contract.
-    string public constant VERSION = "1.0.1";
+    string public constant VERSION = "1.1.0";
+
+    /// @notice This is a sentinel value used to determine when a delegate is set to expose 
+    ///  support for an interface containing more than a single function. See `delegates` and
+    ///  `setDelegate` for more information.
+    address public constant COMPOSITE_PLACEHOLDER = address(1);
 
     /// @notice A pre-shifted "1", used to increment the authVersion, so we can "prepend"
     ///  the authVersion to an address (for lookups in the authorizations mapping)
@@ -66,6 +71,22 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     ///  Used for replay prevention. The nonce value in the transaction must exactly equal the current
     ///  nonce value in the wallet for that key. (This mirrors the way Ethereum's transaction nonce works.)
     mapping(address => uint256) public nonces;
+
+    /// @notice A mapping tracking dynamically supported interfaces and their corresponding
+    ///  implementation contracts. Keys are interface IDs and values are addresses of
+    ///  contracts that are responsible for implementing the function corresponding to the
+    ///  interface.
+    ///  
+    ///  Delegates are added (or removed) via the `setDelegate` method after the contract is
+    ///  deployed, allowing support for new interfaces to be dynamically added after deployment.
+    ///  When a delegate is added, its interface ID is considered "supported" under EIP165. 
+    ///
+    ///  For cases where an interface composed of more than a single function must be
+    ///  supported, it is necessary to manually add the composite interface ID with 
+    ///  `setDelegate(interfaceId, COMPOSITE_PLACEHOLDER)`. Interface IDs added with the
+    ///  COMPOSITE_PLACEHOLDER address are ignored when called and are only used to specify
+    ///  supported interfaces.
+    mapping(bytes4 => address) public delegates;
 
     /// @notice A special address that is authorized to call `emergencyRecovery()`. That function
     ///  resets ALL authorization for this wallet, and must therefore be treated with utmost security.
@@ -103,7 +124,7 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     ///  would either result in duplicated code, or additional overhead in the invoke()
     ///  calls (due to the stack manipulation for calling into the shared verification function).
     ///  Doing it this way makes calling the administration functions more expensive (since they
-    ///  go through a explict call() instead of just branching within the contract), but it
+    ///  go through a explicit call() instead of just branching within the contract), but it
     ///  makes invoke() more efficient. We assume that invoke() will be used much, much more often
     ///  than any of the administration functions.
     modifier onlyInvoked() {
@@ -144,7 +165,7 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     /// @param value the amount of ether sent
     event Received(address from, uint value);
 
-    /// @notice Emitted whenever a transaction is processed sucessfully from this wallet. Includes
+    /// @notice Emitted whenever a transaction is processed successfully from this wallet. Includes
     ///  both simple send ether transactions, as well as other smart contract invocations.
     /// @dev hash is 0x101214446435ebbb29893f3348e3aae5ea070b63037a3df346d09d3396a34aee
     /// @param hash The hash of the entire operation set. 0 is returned when emitted from `invoke0()`.
@@ -155,6 +176,12 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
         uint256 result,
         uint256 numOperations
     );
+
+    /// @notice Emitted when a delegate is added or removed.
+    /// @param interfaceId The interface ID as specified by EIP165
+    /// @param delegate The address of the contract implementing the given function. If this is
+    ///  COMPOSITE_PLACEHOLDER, we are indicating support for a composite interface.
+    event DelegateUpdated(bytes4 interfaceId, address delegate);
 
     /// @notice The shared initialization code used to setup the contract state regardless of whether or
     ///  not the clone pattern is being used.
@@ -177,19 +204,63 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     }
 
     /// @notice The fallback function, invoked whenever we receive a transaction that doesn't call any of our
-    ///  named functions. In particular, this method is called when we are the target of a simple send transaction
-    ///  or when someone tries to call a method that we don't implement. We assume that a "correct" invocation of
-    ///  this method only occurs when someone is trying to transfer ether to this wallet, in which case and the
-    ///  `msg.data.length` will be 0.
+    ///  named functions. In particular, this method is called when we are the target of a simple send
+    ///  transaction, when someone calls a method we have dynamically added a delegate for, or when someone
+    ///  tries to call a function we don't implement, either statically or dynamically.
     ///
-    ///  NOTE: Some smart contracts send 0 eth as part of a more complex
-    ///  operation (-cough- CryptoKitties -cough-) ; ideally, we'd `require(msg.value > 0)` here, but to work
-    ///  with those kinds of smart contracts, we accept zero sends and just skip logging in that case.
+    ///  A correct invocation of this method occurs in two cases:
+    ///  - someone transfers ETH to this wallet (`msg.data.length` is  0)
+    ///  - someone calls a delegated function (`msg.data.length` is greater than 0 and
+    ///    `delegates[msg.sig]` is set) 
+    ///  In all other cases, this function will revert.
+    ///
+    ///  NOTE: Some smart contracts send 0 eth as part of a more complex operation
+    ///  (-cough- CryptoKitties -cough-); ideally, we'd `require(msg.value > 0)` here when
+    ///  `msg.data.length == 0`, but to work with those kinds of smart contracts, we accept zero sends
+    ///  and just skip logging in that case.
     function() external payable {
-        require(msg.data.length == 0, "Invalid transaction.");
         if (msg.value > 0) {
             emit Received(msg.sender, msg.value);
         }
+        if (msg.data.length > 0) {
+            address delegate = delegates[msg.sig]; 
+            require(delegate > COMPOSITE_PLACEHOLDER, "Invalid transaction");
+
+            // We have found a delegate contract that is responsible for the method signature of
+            // this call. Now, pass along the calldata of this CALL to the delegate contract.  
+            assembly {
+                calldatacopy(0, 0, calldatasize())
+                let result := staticcall(gas, delegate, 0, calldatasize(), 0, 0)
+                returndatacopy(0, 0, returndatasize())
+
+                // If the delegate reverts, we revert. If the delegate does not revert, we return the data
+                // returned by the delegate to the original caller.
+                switch result 
+                case 0 {
+                    revert(0, returndatasize())
+                } 
+                default {
+                    return(0, returndatasize())
+                }
+            } 
+        }    
+    }
+
+    /// @notice Adds or removes dynamic support for an interface. Can be used in 3 ways:
+    ///   - Add a contract "delegate" that implements a single function
+    ///   - Remove delegate for a function
+    ///   - Specify that an interface ID is "supported", without adding a delegate. This is
+    ///     used for composite interfaces when the interface ID is not a single method ID.
+    /// @dev Must be called through `invoke`
+    /// @param _interfaceId The ID of the interface we are adding support for
+    /// @param _delegate Either:
+    ///    - the address of a contract that implements the function specified by `_interfaceId`
+    ///      for adding an implementation for a single function
+    ///    - 0 for removing an existing delegate
+    ///    - COMPOSITE_PLACEHOLDER for specifying support for a composite interface
+    function setDelegate(bytes4 _interfaceId, address _delegate) external onlyInvoked {
+        delegates[_interfaceId] = _delegate;
+        emit DelegateUpdated(_interfaceId, _delegate);
     }
     
     /// @notice Configures an authorizable address. Can be used in four ways:
@@ -201,19 +272,19 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     /// @param _authorizedAddress the address to configure authorization
     /// @param _cosigner the corresponding cosigning address
     function setAuthorized(address _authorizedAddress, uint256 _cosigner) external onlyInvoked {
-        // Note: Allowing a signer to remove itself is actually pretty terrible; it could result in the user
-        // removing their only available authorized key. Unfortunately, due to how the invocation forwarding
-        // works, we don't actually _know_ which signer was used to call this method, so there's no easy way
-        // to prevent this.
-
-        // Note: Allowing the backup key to be set as an authorized address bypasses the recovery mechanisms.
-        // Dapper can prevent this with offchain logic and the cosigner, but it would be nice to have
-        // this enforced by the smart contract logic itself.
-
+        // TODO: Allowing a signer to remove itself is actually pretty terrible; it could result in the user
+        //  removing their only available authorized key. Unfortunately, due to how the invocation forwarding
+        //  works, we don't actually _know_ which signer was used to call this method, so there's no easy way
+        //  to prevent this.
+        
+        // TODO: Allowing the backup key to be set as an authorized address bypasses the recovery mechanisms.
+        //  Dapper can prevent this with offchain logic and the cosigner, but it would be nice to have 
+        //  this enforced by the smart contract logic itself.
+        
         require(_authorizedAddress != address(0), "Authorized addresses must not be zero.");
         require(_authorizedAddress != recoveryAddress, "Do not use the recovery address as an authorized address.");
         require(address(_cosigner) == address(0) || address(_cosigner) != recoveryAddress, "Do not use the recovery address as a cosigner.");
-
+ 
         authorizations[authVersion + uint256(_authorizedAddress)] = _cosigner;
         emit Authorized(_authorizedAddress, _cosigner);
     }
@@ -262,10 +333,11 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     ///  get themselves a bit of gas refund in the bargin.
     /// @dev keys must be known to caller or else nothing is refunded
     /// @param _version the version of the mapping which you want to delete (unshifted)
-    /// @param _keys the authorization keys to delete
+    /// @param _keys the authorization keys to delete 
     function recoverGas(uint256 _version, address[] calldata _keys) external {
+        // TODO: should this be 0xffffffffffffffffffffffff ?
         require(_version > 0 && _version < 0xffffffff, "Invalid version number.");
-
+        
         uint256 shiftedVersion = _version << 160;
 
         require(shiftedVersion < authVersion, "You can only recover gas from expired authVersions.");
@@ -276,7 +348,7 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     }
 
     /// @notice Should return whether the signature provided is valid for the provided data
-    ///  See https://github.com/ethereum/EIPs/issues/1654
+    ///  See https://github.com/ethereum/EIPs/issues/1271
     /// @dev This function meets the following conditions as per the EIP:
     ///  MUST return the bytes4 magic value `0x1626ba7e` when function passes.
     ///  MUST NOT modify state (using `STATICCALL` for solc < 0.5, `view` modifier for solc > 0.5)
@@ -335,23 +407,35 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
             return 0;
         }
 
-        return ERC1654_VALIDSIGNATURE;
+        return ERC1271_VALIDSIGNATURE;
     }
 
-    /// @notice Query if a contract implements an interface
+    /// @notice Query if this contract implements an interface. This function takes into account
+    ///  interfaces we implement dynamically through delegates. For interfaces that are just a
+    ///  single method, using `setDelegate` will result in that method's ID returning true from 
+    ///  `supportsInterface`. For composite interfaces that are composed of multiple functions, it is
+    ///  necessary to add the interface ID manually with `setDelegate(interfaceID,
+    ///  COMPOSITE_PLACEHOLDER)`
+    ///  IN ADDITION to adding each function of the interface as usual.
     /// @param interfaceID The interface identifier, as specified in ERC-165
     /// @dev Interface identification is specified in ERC-165. This function
     ///  uses less than 30,000 gas.
     /// @return `true` if the contract implements `interfaceID` and
     ///  `interfaceID` is not 0xffffffff, `false` otherwise
-    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
-        // I am not sure why the linter is complaining about the whitespace
-        return
+    function supportsInterface(bytes4 interfaceID) external view returns (bool) {
+        // First check if the ID matches one of the interfaces we support statically.
+        if (
             interfaceID == this.supportsInterface.selector || // ERC165
             interfaceID == ERC721_RECEIVED_FINAL || // ERC721 Final
             interfaceID == ERC721_RECEIVED_DRAFT || // ERC721 Draft
             interfaceID == ERC223_ID || // ERC223
-            interfaceID == ERC1654_VALIDSIGNATURE; // ERC1654
+            interfaceID == ERC1271_VALIDSIGNATURE // ERC1271
+        ) {
+            return true;
+        }
+        // If we don't support the interface statically, check whether we have added
+        // dynamic support for it.
+        return uint256(delegates[interfaceID]) > 0;
     }
 
     /// @notice A version of `invoke()` that has no explicit signatures, and uses msg.sender
@@ -426,7 +510,7 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
     /// @param data The data containing the transactions to be invoked; see internalInvoke for details.
     function invoke1SignerSends(uint8 v, bytes32 r, bytes32 s, bytes calldata data) external {
         // check signature version
-        // `ecrecover` will infact return 0 if given invalid
+        // `ecrecover` will in fact return 0 if given invalid
         // so perhaps this check is redundant
         require(v == 27 || v == 28, "Invalid signature version.");
         
@@ -551,7 +635,7 @@ contract CoreWallet is ERC721Receivable, ERC223Receiver, ERC1654  {
             // A pointer to the end of the data object
             let endPtr := add(memPtr, mload(data))
 
-            // Now, memPtr is a cursor pointing to the begining of the current sub-operation
+            // Now, memPtr is a cursor pointing to the beginning of the current sub-operation
             memPtr := add(memPtr, 1)
 
             // Loop through data, parsing out the various sub-operations

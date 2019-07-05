@@ -59,7 +59,7 @@ const createWallet = async function (
           .forEach(log => {
             _wallet = CloneableWallet.at(log.args.wallet);
           });
-        //console.log("clone wallet gas used: " + result.receipt.gasUsed);
+        console.log("clone wallet gas used: " + result.receipt.gasUsed);
       }
       break;
     case WALLET_REGULAR:
@@ -74,7 +74,7 @@ const createWallet = async function (
           .forEach(log => {
             _wallet = FullWallet.at(log.args.wallet);
           });
-        //console.log("full wallet gas used: " + result.receipt.gasUsed);
+        console.log("full wallet gas used: " + result.receipt.gasUsed);
       }
       break;
     case WALLET_CLONE_2:
@@ -90,7 +90,7 @@ const createWallet = async function (
             .forEach(log => {
               _wallet = CloneableWallet.at(log.args.wallet);
             });
-          //console.log("clone2 wallet gas used: " + result.receipt.gasUsed);
+          console.log("clone2 wallet gas used: " + result.receipt.gasUsed);
       }
       break;
     case WALLET_REGULAR_2:
@@ -107,7 +107,7 @@ const createWallet = async function (
           .forEach(log => {
             _wallet = FullWallet.at(log.args.wallet);
           });
-        //console.log("full wallet gas used: " + result.receipt.gasUsed);
+        console.log("full wallet gas used: " + result.receipt.gasUsed);
       }
       break;
   }
@@ -141,6 +141,43 @@ const getNonce = async function (_wallet, _key) {
   // Run before each test. Sets the sequence ID up to be used in the tests
   return (await _wallet.nonces.call(_key)).toNumber();
 };
+
+/**
+ * Calls a wallet with an arbitrary method ID
+ * @param {FullWallet} _wallet the wallet to call
+ * @param {string} _methodID The method ID of the method we're calling
+ * @param {Buffer} _data The data to pass to the method, encoding the args
+ */
+const callDynamic = async function (_wallet, _methodID, _data) {
+  let args = "";
+  if (_data) {
+    args = _data.toString("hex");
+  };
+  return (await web3.eth.call({
+    to: _wallet.address,
+    data: "0x" + _methodID + args,
+  }));
+}
+
+/**
+ * Sends a transaction to a wallet with an arbitrary method ID
+ * @param {FullWallet} _wallet The wallet to call
+ * @param {string} _from The sender of the transaction
+ * @param {string} _methodID The method ID of the method we're calling
+ * @param {Buffer} _data The data to pass to the method, encoding the args
+ */
+const transactDynamic = async function (_wallet, _from, _methodID, _data) {
+  let args = "";
+  if (_data) {
+    args = _data.toString("hex");
+  };
+  return (await web3.eth.sendTransaction({
+    to: _wallet.address,
+    from: _from, 
+    data: "0x" + _methodID + args,
+  }));
+}
+ 
 
 /**
  * 
@@ -369,7 +406,7 @@ const transact2 = async function (
     { from: _sender }
   );
 
-  //utils.printLogs(result);
+  utils.printLogs(result);
 
   //console.log("child key 1: " + address1);
   //console.log("child key 2: " + address2);
@@ -481,5 +518,7 @@ module.exports = {
   transact2Twice,
   erc20Transfer,
   erc721Transfer,
-  txData
+  txData,
+  callDynamic,
+  transactDynamic
 };
